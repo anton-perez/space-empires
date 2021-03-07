@@ -26,15 +26,15 @@ class CustomPlayer():
 
     my_scout_coords = myself['scout_coords']
     opponent_home_colony_coords = opponent['home_colony_coords']
+    if choices != []:
+      min_coords = choices[0]
+      min_distance = self.calc_distance((my_scout_coords[0] + min_coords[0], my_scout_coords[1] + min_coords[1]), opponent_home_colony_coords)
+      for choice in choices:
+        current_coords = (my_scout_coords[0] + choice[0], my_scout_coords[1] + choice[1])
+        current_distance = self.calc_distance(current_coords, opponent_home_colony_coords)
 
-    min_coords = choices[0]
-    min_distance = self.calc_distance((my_scout_coords[0] + min_coords[0], my_scout_coords[1] + min_coords[1]), opponent_home_colony_coords)
-    for choice in choices:
-      current_coords = (my_scout_coords[0] + choice[0], my_scout_coords[1] + choice[1])
-      current_distance = self.calc_distance(current_coords, opponent_home_colony_coords)
+        if current_distance < min_distance:
+          min_distance = current_distance
+          min_coords = choice
 
-      if current_distance < min_distance:
-        min_distance = current_distance
-        min_coords = choice
-
-    return min_coords 
+      return min_coords 

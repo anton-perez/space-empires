@@ -19,12 +19,12 @@ class CustomPlayer():
   def calc_distance(self, point_1, point_2):
     return (abs(point_2[0]-point_1[0])**2 + abs(point_2[1]-point_1[1])**2)**0.5
 
-  def choose_translation(self, game_state, choices):
+  def choose_translation(self, game_state, choices, scout_num):
     myself = game_state['players'][self.player_number]
     opponent_player_number = self.get_opponent_player_number()
     opponent = game_state['players'][opponent_player_number]
 
-    my_scout_coords = myself['scout_coords']
+    my_scout_coords = myself['scout_coords'][scout_num]
     opponent_home_colony_coords = opponent['home_colony_coords']
     if choices != []:
       min_coords = choices[0]

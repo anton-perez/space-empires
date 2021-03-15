@@ -1,6 +1,5 @@
 import random
 
-
 class Game:
   def __init__(self, players, random_seed, board_size=[7,7]):
     self.players = players

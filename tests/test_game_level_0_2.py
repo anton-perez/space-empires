@@ -1,31 +1,21 @@
 import sys
 sys.path.append('games')
-from game_level_0_1 import *
+from game_level_0_2 import *
 sys.path.append('players')
 from random_player import *
 from custom_player import *
 
-tests = [
-    {'seed': 0, 'winner': 2},
-    {'seed': 1, 'winner': 1},
-    {'seed': 2, 'winner': 2},
-    {'seed': 3, 'winner': 1},
-    {'seed': 4, 'winner': 1},
-    {'seed': 5, 'winner': 2},
-    {'seed': 6, 'winner': 2},
-    {'seed': 7, 'winner': 1},
-    {'seed': 8, 'winner': 1},
-    {'seed': 9, 'winner': 1}
-]
-
-print('Testing seed...')
-for test in tests:
+num_wins = {1: 0, 2: 0}
+scouts_remaining = {1: 0, 2: 0}
+for _ in range(200):
   players = [CustomPlayer(), CustomPlayer()]
-  random_seed = test['seed']
-
-  game = Game(players, random_seed)
+  game = Game(players)
   game.run_to_completion()
+  winner = game.state['winner']
+  scouts_remaining[winner] += len(game.state['players'][winner]['scout_coords'])
 
-  desired_winner = test['winner']
-  assert(game.game_state['winner'] == desired_winner)
-print('PASSED')
+  num_wins[winner] += 1
+avg_scouts_remaining = {k:v/200 for k,v in scouts_remaining.items()}
+
+print(num_wins)
+print(avg_scouts_remaining)

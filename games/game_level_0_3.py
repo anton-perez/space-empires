@@ -4,12 +4,12 @@ sys.path.append('logs')
 from logger import *
 
 class Game:
-  def __init__(self, players, board_size=[7,7]):
-    self.logs = Logger('/home/runner/space-empires/logs/game-0.2-logs.txt')
+  def __init__(self, players, random_seed, board_size=[7,7]):
+    self.logs = Logger('/home/runner/space-empires/logs/game-0.3-logs.txt')
     self.logs.clear_log()
     self.players = players
     self.set_player_numbers()
-    #random.seed(random_seed)
+    random.seed(random_seed)
     board_x, board_y = board_size
     mid_x = (board_x + 1) // 2
     mid_y = (board_y + 1) // 2
@@ -85,19 +85,61 @@ class Game:
           self.state['players'][player.player_number]['scout_coords'][scout_num] = new_coords
           self.logs.write('\tPlayer {} Scout {}: {} -> {}\n'.format(player.player_number, scout_num, current_coords, new_coords))
 
-    
-
     self.logs.write('\nEND OF TURN {} MOVEMENT PHASE\n'.format(self.state['turn']))
     
 
   def complete_combat_phase(self):
-    self.logs.write('\nBEGINNING OF TURN {} COMBAT PHASE\n\n'.format(self.state['turn']))
+    self.logs.write('\nBEGINNING OF TURN {} COMBAT PHASE\n'.format(self.state['turn']))
+    combat_coords = self.combat_locations()
+    if combat_coords != []:   
+      self.logs.write('\n\tCombat Locations:\n')
+    for coords in combat_coords:
+      self.logs.write('\n\t\t' + str(coords) + '\n')
+      for player in self.players:
+        player_scouts = self.state['players'][player.player_number]['scout_coords']
+        for scout_num in player_scouts:
+          if player_scouts[scout_num] == coords:
+            self.logs.write('\t\t\tPlayer {} Scout {}\n'.format(player.player_number, scout_num))
 
-    while self.combat_on_board():
-      losing_player = -round(random.random())+2
-      del self.state['players'][losing_player]['scout_coords'][len(self.state['players'][losing_player]['scout_coords'])]
+    for location in combat_coords:
+      combat_order = []
+      for player in self.players:
+        player_scouts = self.state['players'][player.player_number]['scout_coords']
+        for scout_num in player_scouts:
+          if player_scouts[scout_num] == location:
+            combat_order.append((player.player_number, scout_num))
+      
+      self.logs.write('\n\tCombat at {}\n'.format(location))
+      while self.combat_locations() != []:
+        for (player_number, scout_num) in combat_order:
+          attacker = (player_number, scout_num)
+          for potential_defender in combat_order:
+            if potential_defender[0] == self.get_opponent_player_number(player_number):
+              defender = potential_defender
+              break 
+          self.logs.write('\n\t\tAttacker: Player {} Scout {}\n'.format(attacker[0], attacker[1]))
+          self.logs.write('\t\tDefender: Player {} Scout {}\n'.format(defender[0], defender[1]))
+        
+          hit_value = round(random.random())
+          if hit_value == 0:
+            self.logs.write('\t\t(Miss)\n')
+          else:
+            self.logs.write('\t\tHit!\n')
+            combat_order.remove(defender)
+            del self.state['players'][defender[0]]['scout_coords'][defender[1]]
+            self.logs.write('\t\tPlayer {} Scout {} was destroyed\n'.format(defender[0], defender[1]))
+    
+    if combat_coords != []:    
+      self.logs.write('\n\tSurvivors:\n')
+    for coords in combat_coords:
+      self.logs.write('\t\t' + str(coords) + '\n')
+      for player in self.players:
+        player_scouts = self.state['players'][player.player_number]['scout_coords']
+        for scout_num in player_scouts:
+          if player_scouts[scout_num] == coords:
+            self.logs.write('\t\t\tPlayer {} Scout {}\n'.format(player.player_number, scout_num))
 
-    self.logs.write('\nEND OF TURN {} COMBAT PHASE\n\n'.format(self.state['turn']))
+    self.logs.write('\nEND OF TURN {} COMBAT PHASE\n'.format(self.state['turn']))
 
   def run_to_completion(self):
     while self.state['winner'] == None:
@@ -132,12 +174,15 @@ class Game:
     elif player_number == 2:
       return 1
   
-  def combat_on_board(self):
-   for player in self.players:
-    player_scouts =  self.state['players'][player.player_number]['scout_coords']
-    opponent_player_scouts = self.state['players'][self.get_opponent_player_number(player.player_number)]['scout_coords']
-    for scout_num in player_scouts:
-      if player_scouts[scout_num] in opponent_player_scouts.values():
-        return True
+  def combat_locations(self):
+    combat_locations = []
+    for player in self.players:
+      player_scouts =  self.state['players'][player.player_number]['scout_coords']
+      opponent_player_scouts = self.state['players'][self.get_opponent_player_number(player.player_number)]['scout_coords']
+      for scout_num in player_scouts:
+        if player_scouts[scout_num] in opponent_player_scouts.values():
+          combat_locations.append(player_scouts[scout_num])
+          break
+      break
 
-    return False
+    return combat_locations
